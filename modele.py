@@ -1,5 +1,9 @@
 from typing import Type
 
+# Definim o excepție personalizată pentru proiectul tău
+class FonduriInsuficienteError(Exception):
+    pass
+
 class Tranzactie:
     def __init__(self, suma, tip, categorie):
         self.suma = float(suma) 
@@ -22,17 +26,17 @@ class Portofel:
     # --- LOGICA DE BLOCARE SOLD NEGATIV ---
         if tranzactie.tip.lower() == "cheltuiala":  
             balanta_curenta = self.calculeaza_balanta()
-            if balanta_curenta - tranzactie.suma <= 0:
-                print("TRANZACTIE RESPINSA!")
-                print(f"Fonduri insuficiente. Balanța actuală este de {balanta_curenta} RON, iar cheltuiala este de {tranzactie.suma} RON.")
-                print(f"Îți lipsesc {abs(balanta_curenta - tranzactie.suma)} RON pentru a efectua această tranzacție.")
-                return False  # Returnăm False pentru că tranzacția a eșuat
-            
+            if balanta_curenta - tranzactie.suma < 0:
+                # Nu mai scriem print, pur și simplu aruncăm eroarea cu textul dorit
+                raise FonduriInsuficienteError(
+                    f"Fonduri insuficiente. Balanța actuală este de {balanta_curenta} RON, iar cheltuiala este de {tranzactie.suma} RON.\n"
+                    f"Îți lipsesc {abs(balanta_curenta - tranzactie.suma)} RON pentru a efectua această tranzacție."
+                )
+                
         # Dacă este Venit sau dacă sunt destule fonduri, adăugăm tranzacția
         self.tranzactii.append(tranzactie)
-        return True
+        
   
-    
     def calculeaza_balanta(self):
         balanta = 0.0
         for t in self.tranzactii:

@@ -1,4 +1,4 @@
-from modele import Tranzactie, Portofel
+from modele import Tranzactie, Portofel, FonduriInsuficienteError
 from stocare import ManagerStocare
 
 class MeniuInterfata:
@@ -35,23 +35,22 @@ class MeniuInterfata:
             
             noua_tranzactie = Tranzactie(suma, tip, categorie)
             
-            # Trimitem tranzacția către portofel și verificăm dacă a fost aprobată
-            if self.portofel.adauga_tranzactie(noua_tranzactie):
-                # Salvăm în JSON și afișăm succesul DOAR dacă portofelul a aprobat-o (True)
-                self.stocare.salveaza(self.portofel.tranzactii) 
-                print("---- TRANZACTIE SALVATA CU SUCCES ----")
-            else:
-                # Dacă portofelul a returnat False, nu salvăm nimic și ne oprim
-                return
-        
-        except ValueError:
-            print("Eroare: Introdu un nr valid pt suma!")
+            # Încercăm să adăugăm tranzacția. Dacă portofelul dă raise, codul sare direct la block-ul except de jos
+            self.portofel.adauga_tranzactie(noua_tranzactie)
 
-            # Salvăm automat în JSON după fiecare adăugare
+            # Salvăm doar dacă nu s-a aruncat nicio excepție
             self.stocare.salveaza(self.portofel.tranzactii) 
-            print("----TRANZACTIE SALVATA CU SUCCES----")
-    
+            print("---- TRANZACTIE SALVATA CU SUCCES ----")
 
+        except FonduriInsuficienteError as e:
+            # Aici prindem eroarea generată de Portofel și afișăm mesajul ei
+            print(f"\n TRANZACTIE RESPINSA!")
+            print(e)
+            
+        except ValueError:
+            # Aici prindem doar dacă utilizatorul scrie litere în loc de cifre la sumă
+            print("Eroare: Introdu un nr valid pt suma!")
+            
     def afiseaza_tranzactii(self):
         print("\n ---- Istoric tranzactii ----")
         if not self.portofel.tranzactii:
