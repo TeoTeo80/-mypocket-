@@ -27,17 +27,6 @@ class MeniuInterfata:
                 print("Suma trebuie sa fie un nr pozitiv!")
                 return
             
-            # --- LOGICA DE BLOCARE SOLD NEGATIV ---
-
-            if tip == "cheltuiala":
-                balanta_curenta = self.portofel.calculeaza_balanta()
-                if balanta_curenta - suma <= 0:
-                    print(f"TRANZACTIE RESPINSA!")
-                    print(f"Fonduri insuficiente. Balanța actuală este de {balanta_curenta} RON, iar cheltuiala este de {suma} RON.")
-                    print(f"Îți lipsesc {abs(balanta_curenta - suma)} RON pentru a efectua această tranzacție.")
-                    return
-            
-            # --------
 
             categorie = input("Introdu categoria ").strip()
             if not categorie:
@@ -45,14 +34,23 @@ class MeniuInterfata:
                 return
             
             noua_tranzactie = Tranzactie(suma, tip, categorie)
-            self.portofel.adauga_tranzactie(noua_tranzactie)
+            
+            # Trimitem tranzacția către portofel și verificăm dacă a fost aprobată
+            if self.portofel.adauga_tranzactie(noua_tranzactie):
+                # Salvăm în JSON și afișăm succesul DOAR dacă portofelul a aprobat-o (True)
+                self.stocare.salveaza(self.portofel.tranzactii) 
+                print("---- TRANZACTIE SALVATA CU SUCCES ----")
+            else:
+                # Dacă portofelul a returnat False, nu salvăm nimic și ne oprim
+                return
+        
+        except ValueError:
+            print("Eroare: Introdu un nr valid pt suma!")
 
             # Salvăm automat în JSON după fiecare adăugare
             self.stocare.salveaza(self.portofel.tranzactii) 
             print("----TRANZACTIE SALVATA CU SUCCES----")
-
-        except ValueError:
-            print("Eroare: Introdu un nr valid pt suma!")
+    
 
     def afiseaza_tranzactii(self):
         print("\n ---- Istoric tranzactii ----")
